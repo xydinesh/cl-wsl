@@ -6,6 +6,6 @@
   :license  "Apache 2.0"
   :version "0.0.1"
   :serial t
-  :depends-on (#:hunchentoot)
+  :depends-on (#:hunchentoot #:split-sequence)
   :components ((:file "package")
                (:file "cl-wsl")))

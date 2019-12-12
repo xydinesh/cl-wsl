@@ -1,5 +1,5 @@
 ;;;; package.lisp
 
 (defpackage #:cl-wsl
-  (:use #:cl)
+  (:use #:cl #:split-sequence)
   (:export :main))
