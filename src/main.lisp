@@ -1,14 +1,18 @@
 ;;;; cl-wsl.lisp
 (defpackage cl-wsl
-  (:use :cl))
+  (:use :cl)
+  (:export 
+    :random-schedule
+    :random-week))
+
 (in-package :cl-wsl)
 
 (defun random-from-range (start end)
   (+ start (random (+ 1 (- end start)) (make-random-state t))))
 
 (defun random-week()
-  (let ((week (make-array '(12)))
-	(m 0) (n 0) (value 0) (l 0) (teams nil)) 
+    (let ((week (make-array '(12)))
+          (m 0) (n 0) (value 0) (l 0) (teams nil)) 
     (dotimes (k 12)
       (push k teams))
     (setf teams (reverse teams))
