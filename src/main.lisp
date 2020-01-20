@@ -135,6 +135,7 @@
 	(setf j (random-from-range 0 11)))
 
     (setf v1 (aref schedule i j))
+    ;; Byes marked as 100+ values
     (if (>= v1 100)
 	(progn 
 	  (setf byes-1 t)
@@ -143,7 +144,8 @@
     (setf v2 (aref schedule i (abs v1)))
     (if byes-1
 	(setf v2 (- v2 100)))
-    
+
+    ;; make sure we don't get duplicate values
     (dotimes (k 12)
       (push k teams))
     (setf teams (remove (abs v1) teams :test 'equal))
@@ -161,17 +163,32 @@
     (setf v4 (aref schedule i (abs v3)))
     (if byes-2
 	(setf v4 (- v4 100)))
-    
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     ;; Swap Values
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     (setf (aref schedule i j)
 	  (if byes-2
 	      (+ 100 v3)
 	      (if byes-1
-		  (+ 100 v3)
+		  (+ 100 (abs v3))
 		  (abs v3))))
-    (setf (aref schedule i (abs v1)) (if byes-2 (+ 100 v4) (* -1 (abs v4))))
-    (setf (aref schedule i m) (if byes-1 (+ 100 v1) (abs v1)))
-    (setf (aref schedule i (abs v3)) (if byes-1 (+ 100 v2) (* -1 (abs v2))))
+    
+    (setf (aref schedule i (abs v1))
+	  (if (and byes-2 byes-1)
+	      (+ 100 v4)
+	      (* -1 (abs v4))))
+    
+    (setf (aref schedule i m)
+	  (if (and byes-2 byes-1)
+	      (+ 100 (abs v1))
+	      (abs v1)))
+
+    (setf (aref schedule i (abs v3))
+	  (if byes-1
+	      (+ 100 v2)
+	      (if byes-2
+		  (+ 100 (abs v2))
+		  (* -1 (abs v2)))))
     schedule))
 
 (defun modify-schedule(schedule)
