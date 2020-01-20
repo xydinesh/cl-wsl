@@ -1,9 +1,10 @@
 ;;;; cl-wsl.lisp
 (defpackage cl-wsl
   (:use :cl)
-  (:export 
-    :random-schedule
-    :random-week))
+  (:export
+   :swap-teams
+   :random-schedule
+   :random-week))
 
 (in-package :cl-wsl)
 
@@ -11,8 +12,9 @@
   (+ start (random (+ 1 (- end start)) (make-random-state t))))
 
 (defun random-week()
-    (let ((week (make-array '(12)))
-          (m 0) (n 0) (value 0) (l 0) (teams nil)) 
+  (let ((week (make-array '(12)))
+	(value-1 0) (value-2 0)
+          (m 0) (n 0) (l 0) (teams nil)) 
     (dotimes (k 12)
       (push k teams))
     (setf teams (reverse teams))
@@ -35,7 +37,7 @@
 
 ;; Generate a random schedule
 (defun random-schedule()
-  (let ((week nil) (schedule nil) (dup nil) (i 0) (j 0) (l 0) (carray nil))
+  (let ((week nil) (schedule nil) (i 0) (j 0) (l 0))
     (setf schedule (make-array '(9 12)))
     (loop while (< i 9)
 	  do
@@ -54,7 +56,7 @@
 
 ;; Calculate cost for dups
 (defun calculate-cost(schedule)
-  (let ((i 0) (j 0) (cost 0) (dvalue 0) (v 0) (c-count 0) (teams nil))
+  (let ((i 0) (j 0) (cost 0) (dvalue 0) (v 0)  (teams nil))
     (loop while (> 12 i)
 	  do
 	  (setf teams (make-array '(112) :initial-element 0))
@@ -73,9 +75,7 @@
     cost))
 
 (defun swap-rounds (schedule)
-  (let ((i 0) (j 0) (teams nil)
-	      (v1 0)
-	      )
+  (let ((i 0) (j 0) (teams nil) (v1 0) (k 0) (v2 0) (v3 0) (v4 0))
     (dotimes (k 8)
       (push k teams))
     (setf i (random-from-range 0 11))
@@ -125,29 +125,53 @@
     ;(format t "After -> schedule: ~a ~%" schedule)
     schedule))
 
-(defun swap-teams(schedule)
-  (let ((i 0) (j 0) (m 0) (teams nil)
-	      (v1 0) (v2 0) (v3 0) (v4 0))
-    (setf i (random-from-range 0 8))
-    (setf j (random-from-range 0 11))
+(defun swap-teams(schedule &optional i j m)
+  (let ((teams nil) (v1 0) (v2 0) (v3 0) (v4 0) (byes-1 nil) (byes-2 nil))
+
+    (if (not i)
+	(setf i (random-from-range 0 8)))
+
+    (if (not j)
+	(setf j (random-from-range 0 11)))
+
     (setf v1 (aref schedule i j))
-    (if (> 100 (abs v1))
-      (progn
-	(setf v2 (aref schedule i (abs v1)))
-	(dotimes (k 12)
-	  (push k teams))
-	(setf teams (remove (abs v1) teams :test 'equal))
-	(setf teams (remove j teams :test 'equal))
-	(setf m (elt teams (random-from-range 0 (- (length teams) 1))))
-	(setf v3 (aref schedule i m))
-	(if (> 100 (abs v3))
-	  (progn
-	    (setf v4 (aref schedule i (abs v3)))
-	    ; Swap Values
-	    (setf (aref schedule i j) (abs v3))
-	    (setf (aref schedule i (abs v1)) (* -1 (abs v4)))
-	    (setf (aref schedule i m) (abs v1))
-	    (setf (aref schedule i (abs v3)) (* -1 (abs v2)))))))
+    (if (>= v1 100)
+	(progn 
+	  (setf byes-1 t)
+	  (setf v1 (- v1 100))))
+    
+    (setf v2 (aref schedule i (abs v1)))
+    (if byes-1
+	(setf v2 (- v2 100)))
+    
+    (dotimes (k 12)
+      (push k teams))
+    (setf teams (remove (abs v1) teams :test 'equal))
+    (setf teams (remove j teams :test 'equal))
+    
+    (if (not m)
+	(setf m (elt teams (random-from-range 0 (- (length teams) 1)))))
+
+    (setf v3 (aref schedule i m))
+    (if (>= v3 100)
+	(progn 
+	  (setf byes-2 t)
+	  (setf v3 (- v3 100))))
+
+    (setf v4 (aref schedule i (abs v3)))
+    (if byes-2
+	(setf v4 (- v4 100)))
+    
+    ;; Swap Values
+    (setf (aref schedule i j)
+	  (if byes-2
+	      (+ 100 v3)
+	      (if byes-1
+		  (+ 100 v3)
+		  (abs v3))))
+    (setf (aref schedule i (abs v1)) (if byes-2 (+ 100 v4) (* -1 (abs v4))))
+    (setf (aref schedule i m) (if byes-1 (+ 100 v1) (abs v1)))
+    (setf (aref schedule i (abs v3)) (if byes-1 (+ 100 v2) (* -1 (abs v2))))
     schedule))
 
 (defun modify-schedule(schedule)
@@ -158,12 +182,12 @@
       ((= i 1) (swap-teams schedule)))))
 ;; Optimize schedule
 (defun generate-schedule()
-  (let ((week nil) (schedule nil) (i 0) (j 0) (l 0) 
-		   (cost-1 0) (u 0) (delta 0) (temp 0) (beta 0)
-		   (accept 0)
-		   (best-schedule 0)
-		   (best-cost 0)
-		   (cost 0) (nschedule nil))
+  (let ((schedule nil) (i 0) 
+	(cost-1 0) (u 0) (delta 0) (temp 0) (beta 0)
+	(accept 0)
+	(best-schedule 0)
+	(best-cost 0)
+	(cost 0) (nschedule nil))
     (setf schedule (random-schedule))
     (format t "schedule-cost: ~a ~%" (calculate-cost schedule))
     (setf cost (calculate-cost schedule))
@@ -204,7 +228,7 @@
 	(country-table (make-hash-table :test #'equal))
 	(distance-table nil)
 	(distance-list nil)) 
-    (with-open-file (stream "dist.txt")
+    (with-open-file (stream "data/dist.txt")
       ; read file line by line until the end
       (loop for line = (read-line stream nil :eof)
 	    until (eq line :eof)
