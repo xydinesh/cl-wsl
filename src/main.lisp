@@ -75,56 +75,18 @@
     cost))
 
 (defun swap-rounds (schedule)
-  (let ((i 0) (j 0) (teams nil) (v1 0) (k 0) (v2 0) (v3 0) (v4 0))
+  (let ((i 0) )
     (dotimes (k 8)
       (push k teams))
     (setf i (random-from-range 0 11))
     (setf j (random-from-range 0 8))
     (setf teams (remove j teams :test 'equal))
     (setf k (elt teams (random-from-range 0 (- (length teams) 1))))
-    ;(format t "i ~a j ~a k ~a schedule: ~a ~%" i j k schedule)
-    (setf v1 (aref schedule j i))
-    (setf v2 (aref schedule k i))
-    ;(format t "v1 ~a v2 ~a ~%" v1 v2)
-    ; Swap values
-    (if (>= (abs v2) 100)
-      (setf v3 (aref schedule j (- (abs v2) 100)))
-      (setf v3 (aref schedule j (abs v2))))
-    (setf (aref schedule j i) (abs v2))
-
-    (if (>= (abs v2) 100)
-      (setf (aref schedule j (- (abs v2) 100)) (+ 100 i))
-      (setf (aref schedule j (abs v2)) (* -1 i)))
-
-    (if (>= (abs v1) 100)
-      (setf (aref schedule j (- (abs v1) 100)) (abs v3))
-      (setf (aref schedule j (abs v1)) (abs v3)))
-
-    (if (>= (abs v3) 100)
-      (setf (aref schedule j (- (abs v3) 100)) (abs v1))
-      (setf (aref schedule j (abs v3)) (* -1 (abs v1))))
-
-    ;; Swap values in other round
-    (if (>= (abs v1) 100)
-      (setf v4 (aref schedule k (- (abs v1) 100)))
-      (setf v4 (aref schedule k (abs v1))))
-    (setf (aref schedule k i) (abs v1))
-
-    (if (>= (abs v1) 100)
-      (setf (aref schedule k (- (abs v1) 100)) (+ 100 i))
-      (setf (aref schedule k (abs v1)) (* -1 i)))
-
-    (if (>= (abs v2) 100)
-      (setf (aref schedule k (- (abs v2) 100)) (abs v4))
-      (setf (aref schedule k (abs v2)) (abs v4)))
-
-    (if (>= (abs v4) 100)
-      (setf (aref schedule k (- (abs v4) 100)) (abs v2))
-      (setf (aref schedule k (abs v4)) (* -1 (abs v2))))
-
-    ;(format t "After -> schedule: ~a ~%" schedule)
     schedule))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; swap teams in a given week
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun swap-teams(schedule &optional i j m)
   (let ((teams nil) (v1 0) (v2 0) (v3 0) (v4 0) (byes-1 nil) (byes-2 nil))
 
