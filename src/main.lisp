@@ -3,6 +3,7 @@
   (:use :cl)
   (:export
    :swap-teams
+   :swap-rounds
    :random-schedule
    :random-week))
 
@@ -74,14 +75,50 @@
 	  (incf i))
     cost))
 
-(defun swap-rounds (schedule)
-  (let ((i 0) )
+(defun swap-rounds (schedule &optional i j m)
+  (let ((teams nil) (v1 0) (v2 0) (v3 0) (v4 0) (tmp 0))
+
     (dotimes (k 8)
       (push k teams))
-    (setf i (random-from-range 0 11))
-    (setf j (random-from-range 0 8))
+
+    (if (not i)
+	(setf i (random-from-range 0 11)))
+
+    (if (not j)
+	(setf j (random-from-range 0 8)))
+
     (setf teams (remove j teams :test 'equal))
-    (setf k (elt teams (random-from-range 0 (- (length teams) 1))))
+    (if (not m)
+	(setf m (elt teams (random-from-range 0 (- (length teams) 1)))))
+    (format t "i: ~a j: ~a m: ~a ~%" i j m)
+
+    (setf v1 (aref schedule i j))
+    (setf v2 (aref schedule i (abs v1)))
+    (setf v3 (aref schedule m j))
+    (setf v4 (aref schedule m (abs v1)))
+
+    ;; swap values in i row with m
+    ;; i,v1 <-> m,v1
+    (setf (aref schedule i v1) (aref schedule m v1))
+    (setf (aref schedule m v1) v2)
+
+    ;; i,v2 <-> m,v2
+    (setf tmp (aref schedule i (abs v2)))
+    (setf (aref schedule i (abs v2)) (aref schedule m (abs v2)))
+    (setf (aref schedule m (abs v2)) tmp)
+
+    ;; i,v3 <-> m,v3
+    (setf tmp (aref schedule i (abs v3)))
+    (setf (aref schedule i (abs v3)) (aref schedule m (abs v3)))
+    (setf (aref schedule m (abs v3)) tmp)
+
+    ;; i,v4 <-> m,v4
+    (setf tmp (aref schedule i (abs v4)))
+    (setf (aref schedule i (abs v4)) (aref schedule m (abs v4)))
+    (setf (aref schedule m (abs v4)) tmp)
+
+    (format t "v1: ~a v2: ~a v3: ~a v4: ~a ~%" v1 v2 v3 v4)
+    
     schedule))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

@@ -19,6 +19,7 @@
   :components ((:module "tests"
                 :components
                 ((:file "main")
+		 (:file "rounds")
 		 (:file "team"))))
   :description "World Softball League Tests"
   :perform (test-op (op c) (symbol-call :rove :run c)))
