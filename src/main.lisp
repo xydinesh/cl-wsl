@@ -76,7 +76,7 @@
     cost))
 
 (defun swap-rounds (schedule &optional i j m)
-  (let ((teams nil) (v1 0) (v2 0) (v3 0) (v4 0) (tmp 0))
+  (let ((teams nil) (v1 0) (v2 0) (v3 0) (v4 0) (tmp 0) (byes-1 nil) (byes-2 nil))
 
     (dotimes (k 8)
       (push k teams))
@@ -93,9 +93,24 @@
     (format t "i: ~a j: ~a m: ~a ~%" i j m)
 
     (setf v1 (aref schedule i j))
+    (if (>= v1 100)
+	(setf v1 (- v1 100)))
+   
     (setf v2 (aref schedule i (abs v1)))
+    (if (>= v2 100)
+	(setf v2 (- v2 100)))
+    
     (setf v3 (aref schedule m j))
+    (if (>= v3 100)
+	(progn
+	  (setf v3 (- v3 100))
+	  (setf byes-2 t)))
+
     (setf v4 (aref schedule m (abs v1)))
+    (if (>= v4 100)
+	(progn
+	  (setf v4 (- v4 100))
+	  (setf byes-2 t)))
 
     ;; swap values in i row with m
     ;; i,v1 <-> m,v1
