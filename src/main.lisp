@@ -76,7 +76,9 @@
     cost))
 
 (defun swap-rounds (schedule &optional i j m)
-  (let ((teams nil) (v1 0) (v2 0) (v3 0) (v4 0) (tmp 0) (byes-1 nil) (byes-2 nil))
+  (let ((teams nil)
+	(v1 0) (v2 0) (v3 0) (v4 0) (v5 0) (v6 0)
+	(tmp 0) (byes-1 nil) (byes-2 nil) (byes-3 nil) (byes-4 nil))
 
     (dotimes (k 8)
       (push k teams))
@@ -94,8 +96,10 @@
 
     (setf v1 (aref schedule i j))
     (if (>= v1 100)
-	(setf v1 (- v1 100)))
-   
+	(progn
+	  (setf byes-1 t)
+	  (setf v1 (- v1 100))))
+    
     (setf v2 (aref schedule i (abs v1)))
     (if (>= v2 100)
 	(setf v2 (- v2 100)))
@@ -103,37 +107,65 @@
     (setf v3 (aref schedule m j))
     (if (>= v3 100)
 	(progn
-	  (setf v3 (- v3 100))
-	  (setf byes-2 t)))
+	  (setf byes-2 t)
+	  (setf v3 (- v3 100))))
 
-    (setf v4 (aref schedule m (abs v1)))
+    
+    (setf v4 (aref schedule i (abs v3)))
     (if (>= v4 100)
 	(progn
-	  (setf v4 (- v4 100))
-	  (setf byes-2 t)))
-
-    ;; swap values in i row with m
-    ;; i,v1 <-> m,v1
-    (setf (aref schedule i v1) (aref schedule m v1))
-    (setf (aref schedule m v1) v2)
-
-    ;; i,v2 <-> m,v2
-    (setf tmp (aref schedule i (abs v2)))
-    (setf (aref schedule i (abs v2)) (aref schedule m (abs v2)))
-    (setf (aref schedule m (abs v2)) tmp)
-
-    ;; i,v3 <-> m,v3
-    (setf tmp (aref schedule i (abs v3)))
-    (setf (aref schedule i (abs v3)) (aref schedule m (abs v3)))
-    (setf (aref schedule m (abs v3)) tmp)
-
-    ;; i,v4 <-> m,v4
-    (setf tmp (aref schedule i (abs v4)))
-    (setf (aref schedule i (abs v4)) (aref schedule m (abs v4)))
-    (setf (aref schedule m (abs v4)) tmp)
-
-    (format t "v1: ~a v2: ~a v3: ~a v4: ~a ~%" v1 v2 v3 v4)
+	  (setf byes-3 t)
+	  (setf v4 (- v4 100))))
     
+    (setf v5 (aref schedule m (abs v1)))
+    (if (>= v5 100)
+	(progn
+	  (setf byes-4 t)
+	  (setf v5 (- v5 100))))
+    
+    (setf v6 (aref schedule m (abs v3)))
+    (if (>= v6 100)
+	(setf v6 (- v6 100)))
+    
+    (format t "v1: ~a v2: ~a v3: ~a v4: ~a v5: ~a ~%" v1 v2 v3 v4 v5)
+
+    ;; swap values i,j <-> m,j
+    (setf tmp (aref schedule i j))
+    (setf (aref schedule i j) (aref schedule m j))
+    (setf (aref schedule m j) tmp)
+
+    ;; set i,v3 and m,v1
+    (setf (aref schedule i (abs v3))
+	  (if byes-2
+	      (+ 100 (abs v6))
+	      v6))
+    
+    (setf (aref schedule m (abs v1))
+	  (if byes-1
+	      (+ 100 (abs v2))
+	      v2))
+
+    ;; set i,v1 = v4 i,v4 = v1
+    (setf (aref schedule i (abs v1))
+	  (if byes-3
+	      (+ 100 (abs v4))
+	      (abs v4)))
+
+    (setf (aref schedule i (abs v4))
+	  (if byes-3
+	      (+ 100 (abs v1))
+	      (* -1 (abs v1))))
+
+    ;; set m,v3 = v5 and m,v5 = v3
+    (setf (aref schedule m (abs v3))
+	  (if byes-4
+	      (+ 100 (abs v5))
+	      (abs v5)))
+    
+    (setf (aref schedule m (abs v5))
+	  (if byes-4
+	      (+ 100 (abs v3))
+	      (* -1 (abs v3))))
     schedule))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
